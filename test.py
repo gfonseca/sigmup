@@ -5,47 +5,49 @@ import pygame
 
 screen = init((600, 600), "chimps jumping")
 
-chimp_image, chimp_rect = load_image("chimp.bmp")
-c1 = core.GameObject(chimp_image, chimp_rect)
-c2 = core.GameObject(chimp_image, chimp_rect)
-
-trevor_image, trevor_rect = load_image("simon.png")
-t1 = core.GameObject(trevor_image, pygame.Rect(0, 0, 90, 90))
-
-speed = 50
-
-#upLeft = core.Action(move=FirstDegree(speed*-1,2, 0.3, lenght=20))
-#downRight = core.Action(move=FirstDegree(speed, 2, 0.3, lenght=20))
-#downLeft = core.Action(move=FirstDegree(speed*-1, 2, 0.3, lenght=20))
-
+shp_img, shp_rect = load_image("ship2.4.png")
+s = core.GameObject(shp_img, pygame.Rect(250, 500, 21, 30))
+speed = 100
+root_sprite = pygame.Rect(5, 1, 21, 30)
+s.pic = root_sprite
 clock = pygame.time.Clock()
+
 background = pygame.Surface(screen.get_size())
 background = background.convert()
 background.fill((250, 250, 250))
 
+def createGo():
+    return  core.Animation(frames=30, pics=[
+        root_sprite,
+        pygame.Rect(38, 1, 19, 30),
+        pygame.Rect(7, 34, 13, 30)]
+    )
+
+
+def createBack():
+    return core.Animation(frames=30, pics=[
+    pygame.Rect(7, 34, 13, 30),
+    pygame.Rect(38, 1, 19, 30),
+    root_sprite]
+)
+
 def main():
     while 1:
         clock.tick(60)
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
-                c1.set_action(core.Action(move=Chase(speed=speed, target=(10, 10))))
+                s.set_action(core.Action(move=Chase(speed=speed, target=(10, 10)), animation=createGo()))
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
-                c1.set_action(core.Action(move=Chase(speed=speed, target=(570, 10))))
+                s.set_action(core.Action(move=Chase(speed=speed, target=(570, 10)), animation=createBack()))
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
-                c1.set_action(core.Action(move=Chase(speed=speed, target=(10, 570))))
+                s.set_action(core.Action(move=Chase(speed=speed, target=(10, 570))))
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
-                print(pygame.mouse.get_pos())
-                c1.set_action(core.Action(move=Chase(speed=speed, target=(570, 570))))
-                c1.set_action(core.Action(move=Chase(speed=speed, target=pygame.mouse.get_pos())))
-
-        c1.update()
-        t1.update()
-        print(t1.size)
+                s.set_action(core.Action(move=Chase(speed=speed, target=(570, 570))))
+                s.set_action(core.Action(move=Chase(speed=speed, target=pygame.mouse.get_pos())))
+        s.update()
         screen.blit(background, (0,0))
-        screen.blit(c1.image, c1.rect)
-        screen.blit(t1.image, t1.rect, pygame.Rect(10, 10, 30, 70) )
+        screen.blit(s.image, s.rect, s.pic)
         pygame.display.update()
 main()

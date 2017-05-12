@@ -9,6 +9,7 @@ class GameObject(sprite.Sprite):
         self.rect = rect
         self.action = action
         self.image = image
+        self._pic = None
 
     def update(self):
         if self.action is not None:
@@ -67,6 +68,17 @@ class GameObject(sprite.Sprite):
         return locals()
     size = property(**size_methods())
 
+    def pic_methods():
+        doc = "The x position of GameObject."
+        def fget(self):
+            return self._pic
+        def fset(self, pic):
+            if type(pic) is not pygame.Rect:
+                raise AttributeError("pic must be a pygame.Rect")
+            self._pic = pygame.Rect(pic)
+        return locals()
+    pic = property(**pic_methods())
+
 class Action(object):
     def __init__(self, move=None, animation=None):
         self.__move = move
@@ -93,7 +105,8 @@ class Action(object):
 
     def end(self):
         self.gameobj.set_action(None)
-
+        self.animation.end_animation();
+        self.animation.end_move();
 
     def is_complete(self):
         animation = True
@@ -114,9 +127,13 @@ class Move(object):
         self.__tick = 0
         self.__limit_len = lenght
         self.__len = 0
+        self.gameobj = None
 
     def set_gameobj(self, gameobj):
         self.gameobj = gameobj
+
+    def end_move(self):
+        pass
 
     def move(self):
         if self.__tick >= self.__frames:
@@ -126,16 +143,37 @@ class Move(object):
             self.__len += 1
         self.__tick += 1
 
-
 class Animation(object):
-    def __init__(self, speed=1):
+    def __init__(self, pics=[], frames=0, speed=1):
         self._speed = speed
+        self.__pics = pics
+        self.__tick = 0
+        self.__frames = frames
+        self.max_pics = len(pics)
+        self.current_pic = 0
+
+    def end_animation(self):
+        self.current_pic = 0
+        self.__tick = 0
+
+    def set_gameobj(self, gameobj):
+        self.gameobj = gameobj
+        self.gameobj._pic = self.__pics[0]
 
     def animate(self, gameobj):
-        pass
+        if self.__tick >= self.__frames:
+            self.gameobj._pic = self.nextPic()
+            self.__tick = 0
+        self.__tick += 1
 
-    def __init__(self, speed, frames=1, lenght=None):
-        Move.__init__(self, speed, frames, lenght)
+    def nextPic(self):
+        if self.current_pic < self.max_pics-1:
+            self.current_pic += 1;
+            print(self.current_pic, self.max_pics-1)
+        return self.__pics[self.current_pic]
+
+    def is_complete(self):
+        return self.current_pic+1 >= self.max_pics
 
 class FirstDegree(Move):
     def __init__(self, speed, frames=1, a=1, b=0, lenght=None):
@@ -148,7 +186,6 @@ class FirstDegree(Move):
 
     def firstfunc(self, x):
         return self.__a*x + self.__b;
-
 
 class Chase(Move):
     def __init__(self, target, speed, frames=1, lenght=None):
