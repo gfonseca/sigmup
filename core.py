@@ -1,6 +1,7 @@
 from math import pow
 import pygame
 from pygame import sprite
+import operator
 
 class GameObject(sprite.Sprite):
 
@@ -69,7 +70,7 @@ class GameObject(sprite.Sprite):
     size = property(**size_methods())
 
     def pic_methods():
-        doc = "The x position of GameObject."
+        doc = "The pic position of pygame.Rect."
         def fget(self):
             return self._pic
         def fset(self, pic):
@@ -105,8 +106,12 @@ class Action(object):
 
     def end(self):
         self.gameobj.set_action(None)
-        self.animation.end_animation();
-        self.animation.end_move();
+
+        if self.__animation is not None:
+            self.__animation.end_animation();
+
+        if self.__move is not None:
+            self.__move.end_move()
 
     def is_complete(self):
         animation = True
@@ -117,14 +122,13 @@ class Action(object):
 
         if self.__animation is not None:
             animation = self.__animation.is_complete()
-
         return move and animation
 
 class Move(object):
     def __init__(self, speed=1, frames=0, lenght=None):
         self._speed = speed
         self.__frames = frames
-        self.__tick = 0
+        self.__tick = frames
         self.__limit_len = lenght
         self.__len = 0
         self.gameobj = None
@@ -137,9 +141,8 @@ class Move(object):
 
     def move(self):
         if self.__tick >= self.__frames:
-            xy = self.calc(self.gameobj.xy)
-            self.gameobj.xy = tuple(map(lambda t1, t2: t1 + t2, xy, self.gameobj.xy))
-            self.__tick = 0
+            self.gameobj.xy = self.calc(self.gameobj.xy)
+            self.__tick = 1
             self.__len += 1
         self.__tick += 1
 
@@ -169,7 +172,6 @@ class Animation(object):
     def nextPic(self):
         if self.current_pic < self.max_pics-1:
             self.current_pic += 1;
-            print(self.current_pic, self.max_pics-1)
         return self.__pics[self.current_pic]
 
     def is_complete(self):
@@ -199,6 +201,22 @@ class Chase(Move):
 
     def is_complete(self):
         return (self.gameobj.x+self._speed, self.gameobj.y+self._speed) >= self.target and False
+
+class moveTo(Move):
+    def __init__(self, speed=1, frames=1, direction=(0,0), lenght=None):
+        Move.__init__(self, speed=speed, frames=frames, lenght=lenght)
+        self.__direction = direction
+        self.__complete = False
+
+        print(self.__direction)
+
+    def calc(self, xy):
+        out_xy = tuple(map(operator.add, xy, self.__direction))
+        self.__complete = True
+        return out_xy
+
+    def is_complete(self):
+        return False
 
 class SecondDegree(Move):
     def __init__(self, speed, frames, a=1, b=0, c=0):

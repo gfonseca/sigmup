@@ -4,6 +4,7 @@ import pygame
 def init(xy, caption=None):
     pygame.init()
     screen = pygame.display.set_mode(xy)
+    pygame.display.toggle_fullscreen
     pygame.display.set_caption(caption)
     pygame.mouse.set_visible(0)
     return screen
